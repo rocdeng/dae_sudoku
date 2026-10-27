@@ -5,6 +5,9 @@ const $ = (id) => document.getElementById(id);
 
 const els = {
   dropzone: $("dropzone"),
+  dropTitle: document.querySelector("#dropzone .drop-title"),
+  dropHint: document.querySelector("#dropzone .drop-hint"),
+  btnPaste: $("btn-paste"),
   fileInput: $("file-input"),
   boardWrap: $("board-wrap"),
   board: $("board"),
@@ -38,6 +41,16 @@ const state = {
   fullView: null,
 };
 
+const isTouch = matchMedia("(pointer: coarse)").matches;
+const copy = isTouch
+  ? { title: "点这里选择截图", hint: "从相册选图，或拍照后上传", compact: "点击换图" }
+  : { title: "Ctrl + V 粘贴截图", hint: "也可以把图片拖进来，或者点这里选文件", compact: "Ctrl + V 继续粘贴 · 点击换图" };
+const canPaste = typeof navigator.clipboard?.read === "function";
+
+els.dropTitle.textContent = copy.title;
+els.dropHint.textContent = copy.hint;
+els.btnPaste.hidden = !canPaste;
+
 /* ---------------- 交互 ---------------- */
 
 document.querySelectorAll(".mode-btn").forEach((btn) => {
@@ -55,12 +68,17 @@ document.querySelectorAll(".mode-btn").forEach((btn) => {
 
 els.dropzone.addEventListener("click", () => els.fileInput.click());
 els.dropzone.addEventListener("keydown", (e) => {
+  if (e.target !== els.dropzone) return;
   if (e.key === "Enter" || e.key === " ") { e.preventDefault(); els.fileInput.click(); }
 });
 els.fileInput.addEventListener("change", () => {
   const file = els.fileInput.files?.[0];
   if (file) handleImage(file);
   els.fileInput.value = "";
+});
+els.btnPaste.addEventListener("click", (e) => {
+  e.stopPropagation();
+  pasteFromClipboard();
 });
 
 ["dragenter", "dragover"].forEach((evt) =>
@@ -122,6 +140,23 @@ window.addEventListener("resize", () => renderMarkers({ animate: false }));
 
 /* ---------------- 主流程 ---------------- */
 
+async function pasteFromClipboard() {
+  try {
+    const items = await navigator.clipboard.read();
+    for (const item of items) {
+      const type = item.types.find((t) => t.startsWith("image/"));
+      if (!type) continue;
+      await handleImage(await item.getType(type));
+      return;
+    }
+    toast("剪贴板里没有图片，试试选择图片。");
+  } catch (err) {
+    console.warn(err);
+    toast("没拿到剪贴板权限，帮你打开选图。");
+    els.fileInput.click();
+  }
+}
+
 async function handleImage(blob) {
   try {
     const bitmap = await toBitmap(blob);
@@ -145,7 +180,8 @@ async function handleImage(blob) {
     els.toggleFull.checked = false;
     applyView();
 
-    els.dropzone.hidden = true;
+    els.dropzone.classList.add("is-compact");
+    els.dropTitle.textContent = copy.compact;
     els.boardWrap.hidden = false;
     els.actions.hidden = false;
     els.answerCard.hidden = false;
@@ -153,6 +189,7 @@ async function handleImage(blob) {
     updateStats(result, solved);
     renderMarkers({ animate: true });
     renderAnswers();
+    els.boardWrap.scrollIntoView({ behavior: "smooth", block: "nearest" });
   } catch (err) {
     console.error(err);
     toast(err?.message || "这张图没认出来。");

@@ -17,6 +17,9 @@
 
 * { box-sizing: border-box; }
 
+/* 作者样式里的 display 会覆盖浏览器默认的 [hidden] 规则，这里显式兜底 */
+[hidden] { display: none !important; }
+
 html, body {
   margin: 0;
   padding: 0;
@@ -72,6 +75,7 @@ h1 {
   font-size: 14px;
   font-weight: 600;
   padding: 8px 18px;
+  min-height: 44px;
   border-radius: 999px;
   cursor: pointer;
   transition: background .18s ease, color .18s ease, box-shadow .18s ease;
@@ -121,9 +125,48 @@ h1 {
 
 .dropzone.is-over { transform: scale(1.005); }
 
+/* 已有截图后收成顶部一条窄条，继续粘贴/换图用 */
+.dropzone.is-compact {
+  flex-direction: row;
+  flex-wrap: wrap;
+  min-height: 0;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 14px;
+  margin-bottom: 14px;
+}
+
+.dropzone.is-compact .paste-btn {
+  margin-top: 0;
+  min-height: 36px;
+  padding: 0 14px;
+  font-size: 13px;
+}
+
+.dropzone.is-compact .drop-icon,
+.dropzone.is-compact .drop-hint { display: none; }
+
+.dropzone.is-compact .drop-title { font-size: 14px; font-weight: 650; color: var(--ink-2); }
+
 .drop-icon { width: 46px; height: 46px; color: var(--accent); margin-bottom: 4px; }
 .drop-title { margin: 0; font-size: 17px; font-weight: 700; }
 .drop-hint { margin: 0; color: var(--muted); font-size: 13px; }
+
+.paste-btn {
+  margin-top: 8px;
+  min-height: 44px;
+  padding: 0 20px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.paste-btn:hover { background: #f7f9fd; border-color: #d8e0ee; }
 
 .board-wrap { margin: 0; text-align: center; }
 

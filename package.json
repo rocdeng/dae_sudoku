@@ -6,7 +6,7 @@
   "description": "找鹅助手：粘贴游戏截图，自动解出鸭子（鹅）该放的位置",
   "scripts": {
     "start": "node server.js",
-    "test": "node --test tests/"
+    "test": "node --test tests/*.test.js"
   },
   "devDependencies": {
     "playwright-core": "^1.64.1"
