@@ -1,0 +1,14 @@
+{
+  "name": "dae-sudoku",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "找鹅助手：粘贴游戏截图，自动解出鸭子（鹅）该放的位置",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test tests/"
+  },
+  "devDependencies": {
+    "playwright-core": "^1.64.1"
+  }
+}

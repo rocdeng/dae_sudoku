@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>找鹅助手</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" href="assets/goose.png" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <img src="assets/goose.png" alt="" class="brand-icon" />
+      <div>
+        <h1>找鹅助手</h1>
+        <p class="sub">粘贴一张关卡截图，告诉你鹅该放哪儿</p>
+      </div>
+    </div>
+    <div class="modes" role="tablist" aria-label="模式">
+      <button class="mode-btn is-active" data-mode="auto" role="tab" aria-selected="true">全自动</button>
+      <button class="mode-btn" data-mode="step" role="tab" aria-selected="false">推下一步</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="stage" id="stage">
+      <div class="dropzone" id="dropzone">
+        <svg viewBox="0 0 24 24" class="drop-icon" aria-hidden="true">
+          <path d="M12 16V4m0 0L8 8m4-4 4 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
+        <p class="drop-title">Ctrl + V 粘贴截图</p>
+        <p class="drop-hint">也可以把图片拖进来，或者点这里选文件</p>
+        <input type="file" id="file-input" accept="image/*" hidden />
+      </div>
+
+      <figure class="board-wrap" id="board-wrap" hidden>
+        <div class="board" id="board">
+          <img id="screenshot" alt="关卡截图" />
+          <div class="markers" id="markers"></div>
+        </div>
+        <figcaption class="caption">
+          <label class="view-toggle">
+            <input type="checkbox" id="toggle-full" />
+            <span>显示整张截图</span>
+          </label>
+          <span id="caption"></span>
+        </figcaption>
+      </figure>
+    </section>
+
+    <aside class="panel">
+      <div class="card" id="status-card">
+        <h2>识别结果</h2>
+        <dl class="stats" id="stats">
+          <div><dt>棋盘</dt><dd id="stat-grid">—</dd></div>
+          <div><dt>色块</dt><dd id="stat-regions">—</dd></div>
+          <div><dt>已放鹅</dt><dd id="stat-placed">—</dd></div>
+          <div><dt>可行解</dt><dd id="stat-solutions">—</dd></div>
+        </dl>
+        <p class="note" id="note">还没图。</p>
+      </div>
+
+      <div class="card actions" id="actions" hidden>
+        <button class="btn primary" id="btn-step" hidden>下一步</button>
+        <button class="btn" id="btn-all" hidden>全部标出</button>
+        <button class="btn ghost" id="btn-reset">重来</button>
+        <button class="btn ghost" id="btn-pick">换一张</button>
+      </div>
+
+      <div class="card" id="answer-card" hidden>
+        <h2>答案</h2>
+        <ol class="answers" id="answers"></ol>
+      </div>
+    </aside>
+  </main>
+
+  <div class="toast" id="toast" hidden></div>
+  <script type="module" src="src/app.js"></script>
+</body>
+</html>
