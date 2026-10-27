@@ -80,9 +80,12 @@ async function ensureAnalysisServer() {
   await waitForServer(`http://localhost:${analysisPort}/`);
 }
 
-async function analyze(page, png, win) {
+async function analyze(png, win) {
+  await ensurePage();
   const b64 = readFileSync(png).toString("base64");
-  const result = await page.evaluate(async (b64) => {
+  let result;
+  try {
+    result = await page.evaluate(async (b64) => {
     const { analyze } = await import("/src/vision.js");
     const { solveAuto } = await import("/src/solver.js");
     const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
@@ -126,7 +129,11 @@ async function analyze(page, png, win) {
         return { row, col: c, x: cell.x + cell.w / 2, y: cell.y + cell.h / 2 };
       }) : [],
     };
-  }, b64);
+    }, b64);
+  } catch (err) {
+    page = null;   // 下一次 analyze 会重启浏览器
+    throw err;
+  }
 
   const sx = result.image.w / win.w;
   const sy = result.image.h / win.h;
@@ -184,7 +191,30 @@ const stamp = () => new Date().toISOString().replace(/[:.]/g, "-");
 
 let server;
 let browser;
+let page = null;
 let stopping = false;
+
+/** 识别浏览器挂了就重启；分析前都会调用。 */
+async function ensurePage() {
+  try {
+    if (browser && page && !page.isClosed()) return page;
+  } catch {}
+  const had = !!browser;
+  if (browser) {
+    try {
+      if (browser.isConnected()) await browser.close();
+    } catch {}
+  }
+  browser = null;
+  page = null;
+  await ensureAnalysisServer();
+  if (had) await sleep(300);
+  browser = await chromium.launch({ channel: "msedge", headless: true });
+  page = await browser.newPage();
+  await page.goto(`http://localhost:${analysisPort}/`);
+  if (had) console.log("识别浏览器已重启。");
+  return page;
+}
 
 function shutdown() {
   stopping = true;
@@ -213,10 +243,7 @@ try {
   console.log(`窗口：${win.owner} / ${win.title}  ${win.w}x${win.h} @${win.x},${win.y}`);
   console.log(`输出：${dir}`);
 
-  await ensureAnalysisServer();
-  browser = await chromium.launch({ channel: "msedge", headless: true });
-  const page = await browser.newPage();
-  await page.goto(`http://localhost:${analysisPort}/`);
+  await ensurePage();
 
   let step = 0;
   const capture = () => {
@@ -353,7 +380,7 @@ try {
       console.log(`当前屏是「${nav.word}」按钮，直播时会点它。`);
       await exitSoon(0);
     }
-    const result = await analyze(page, png, win);
+    const result = await analyze(png, win);
     console.log(`棋盘：${result.rows}×${result.cols}  色块 ${result.regions}  已放 ${result.placed.length}  解 ${result.solutions}（${result.adjacency}）`);
     if (result.recovered) console.log("严格规则无解，已忽略 X 重新求解（盘面仍一致）。");
     if (result.conflict) console.log(`冲突：${result.conflict}`);
@@ -398,7 +425,7 @@ try {
       if ((seen.includes("恭喜获得") || seen.includes("获得奖励")) && ocr.lines.some((l) => l.text.includes("确定"))) break;
 
       try {
-        result = await analyze(page, png, win);
+        result = await analyze(png, win);
         break;
       } catch (err) {
         if (attempt === 5) {
@@ -407,7 +434,7 @@ try {
           console.log(`图片：${png}`);
           await exitSoon(2);
         }
-        console.log(`画面还没稳定（${attempt + 1}/6），等 1.5s 重试…`);
+        console.log(`画面还没稳定（${attempt + 1}/6）：${err.message}`);
         await sleep(1500);
       }
     }
