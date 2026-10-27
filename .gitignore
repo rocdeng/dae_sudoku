@@ -1,2 +1,4 @@
 node_modules/
 tools/shot.png
+tools/autoplay/macctl
+tools/autoplay/runs/

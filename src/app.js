@@ -28,6 +28,12 @@ const els = {
   answers: $("answers"),
   toast: $("toast"),
   toggleFull: $("toggle-full"),
+  autoplayLevels: $("autoplay-levels"),
+  autoplayDry: $("autoplay-dry"),
+  btnAutoStart: $("btn-autoplay-start"),
+  btnAutoStop: $("btn-autoplay-stop"),
+  autoplayState: $("autoplay-state"),
+  autoplayLog: $("autoplay-log"),
 };
 
 const state = {
@@ -415,6 +421,83 @@ function renderAnswers() {
   els.btnStep.textContent = state.step >= todo.length
     ? `推完了 ${todo.length}/${todo.length}`
     : `下一步 (${state.step}/${todo.length})`;
+}
+
+/* ---------------- 自动玩（仅 Mac 本机） ---------------- */
+
+const autoplayLocal = location.hostname === "localhost" || location.hostname === "127.0.0.1";
+
+async function autoplayApi(path, init) {
+  const res = await fetch(path, { ...init, headers: { "content-type": "application/json" } });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+  return data;
+}
+
+function renderAutoplay(s) {
+  const running = Boolean(s.running);
+  els.btnAutoStart.hidden = running;
+  els.btnAutoStop.hidden = !running;
+  els.autoplayLevels.disabled = running;
+  els.autoplayDry.disabled = running;
+
+  if (running) {
+    const secs = s.startedAt ? Math.round((Date.now() - s.startedAt) / 1000) : 0;
+    els.autoplayState.textContent = `运行中 · 目标 ${s.levels} 关 · ${secs}s`;
+  } else if (s.exitCode !== null && s.exitCode !== undefined) {
+    els.autoplayState.textContent = `已结束（退出码 ${s.exitCode}）`;
+  } else {
+    els.autoplayState.textContent = "未运行";
+  }
+
+  const lines = s.lines || [];
+  els.autoplayLog.hidden = lines.length === 0;
+  if (lines.length) {
+    els.autoplayLog.textContent = lines.join("\n");
+    els.autoplayLog.scrollTop = els.autoplayLog.scrollHeight;
+  }
+}
+
+async function refreshAutoplay() {
+  if (!autoplayLocal) return;
+  try {
+    renderAutoplay(await autoplayApi("/api/autoplay/status"));
+  } catch (err) {
+    els.autoplayState.textContent = `自动玩不可用：${err.message}`;
+  }
+}
+
+els.btnAutoStart.addEventListener("click", async () => {
+  try {
+    await autoplayApi("/api/autoplay/start", {
+      method: "POST",
+      body: JSON.stringify({
+        levels: Number(els.autoplayLevels.value) || 1,
+        dryRun: els.autoplayDry.checked,
+      }),
+    });
+    await refreshAutoplay();
+  } catch (err) {
+    toast(err.message);
+  }
+});
+
+els.btnAutoStop.addEventListener("click", async () => {
+  try {
+    await autoplayApi("/api/autoplay/stop", { method: "POST", body: "{}" });
+    await refreshAutoplay();
+  } catch (err) {
+    toast(err.message);
+  }
+});
+
+if (autoplayLocal) {
+  refreshAutoplay();
+  setInterval(refreshAutoplay, 2000);
+} else {
+  els.autoplayState.textContent = "自动玩只在 Mac 本机（localhost）可用。";
+  els.btnAutoStart.disabled = true;
+  els.btnAutoStop.disabled = true;
 }
 
 let toastTimer = null;

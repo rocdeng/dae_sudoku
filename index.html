@@ -73,6 +73,21 @@
         <h2>答案</h2>
         <ol class="answers" id="answers"></ol>
       </div>
+
+      <div class="card" id="autoplay-card">
+        <h2>自动玩</h2>
+        <div class="autoplay-row">
+          <label class="autoplay-levels">关数 <input type="number" id="autoplay-levels" min="1" max="20" value="3" /></label>
+          <label class="view-toggle">
+            <input type="checkbox" id="autoplay-dry" />
+            <span>干跑</span>
+          </label>
+          <button class="btn primary" id="btn-autoplay-start">开始</button>
+          <button class="btn ghost" id="btn-autoplay-stop" hidden>停止</button>
+        </div>
+        <p class="note" id="autoplay-state">未运行</p>
+        <pre class="autoplay-log" id="autoplay-log" hidden></pre>
+      </div>
     </aside>
   </main>
 
