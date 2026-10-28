@@ -1,5 +1,5 @@
 /**
- * 用本机 Edge 跑一遍真实页面，把识别+求解结果打出来。
+ * 用 Playwright 自带的 Chromium（headless）跑一遍真实页面，把识别+求解结果打出来。
  * 用法: node tools/verify.mjs [图片路径]
  */
 import { spawn } from "node:child_process";
@@ -17,7 +17,7 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
 try {
   await wait(600);
-  const browser = await chromium.launch({ channel: "msedge", headless: true });
+  const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage({ viewport: { width: 1280, height: 1000 } });
   const errors = [];
   page.on("pageerror", (e) => errors.push(String(e)));

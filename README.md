@@ -6,6 +6,7 @@
 
 ```bash
 npm start          # http://localhost:5173
+./start.sh         # 或者这个：带 Node / 端口检查
 ```
 
 打开网页后 `Ctrl + V` 粘贴截图即可，也可以拖图片进去或点右上角选文件。
@@ -29,8 +30,9 @@ npm start          # http://localhost:5173
 ## 测试
 
 ```bash
-npm test                 # 求解器单元测试
-node tools/verify.mjs    # 用本机 Edge 跑一遍真实截图，打印识别结果
+npm test
+npx playwright install chromium   # 首次一次，下载 headless 内核
+node tools/verify.mjs             # 用 Playwright Chromium 跑一遍真实截图，打印识别结果
 ```
 
-`tools/verify.mjs` 依赖 `playwright-core` + 本机已安装的 Edge，不需要额外下载浏览器。
+`tools/verify.mjs` 和 `tools/autoplay/` 使用 Playwright 自带的 Chromium headless 内核（`chrome-headless-shell`），不依赖本机 Edge，也不会在 Dock 里弹图标。

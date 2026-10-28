@@ -18,6 +18,7 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright-core";
+import { pruneRuns } from "./runs.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = resolve(here, "../..");
@@ -209,7 +210,7 @@ async function ensurePage() {
   page = null;
   await ensureAnalysisServer();
   if (had) await sleep(300);
-  browser = await chromium.launch({ channel: "msedge", headless: true });
+  browser = await chromium.launch({ headless: true });
   page = await browser.newPage();
   await page.goto(`http://localhost:${analysisPort}/`);
   if (had) console.log("识别浏览器已重启。");
@@ -240,6 +241,10 @@ try {
 
   const dir = join(here, "runs", `play-${stamp()}`);
   mkdirSync(dir, { recursive: true });
+  const pruned = pruneRuns({ keepDirs: 3, keepLogs: 5 });
+  if (pruned.dirs || pruned.logs) {
+    console.log(`已清理旧运行记录：目录 ${pruned.dirs} 个，日志 ${pruned.logs} 个`);
+  }
   console.log(`窗口：${win.owner} / ${win.title}  ${win.w}x${win.h} @${win.x},${win.y}`);
   console.log(`输出：${dir}`);
 

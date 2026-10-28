@@ -11,6 +11,7 @@ import { spawnSync } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { pruneRuns } from "./runs.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const bin = join(here, "macctl");
@@ -42,6 +43,7 @@ if (cmd === "windows") {
   const seconds = watchIndex >= 0 ? Number(rest[watchIndex + 1] || 30) : 0;
   const dir = join(here, "runs", `probe-${stamp()}`);
   mkdirSync(dir, { recursive: true });
+  pruneRuns({ keepDirs: 3, keepLogs: 5 });
 
   console.log(`窗口：${win.owner} / ${win.title || "(无标题)"}  ${win.w}x${win.h} @${win.x},${win.y}`);
   console.log(`输出：${dir}`);
